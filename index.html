@@ -19,6 +19,36 @@
       #graphiql {
         height: 100vh;
       }
+
+      #graphiql-input-endpoint {
+        display: none;
+        position: fixed;
+        inset: 0px;
+        background: hsl(var(--color-base));
+      }
+      #graphiql-input-endpoint > div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      #graphiql-input-endpoint input {
+        border-radius: 9999px;
+        border: 2px solid;
+        border-color: rgba(255, 255, 255, 0.5);
+        background-color: rgba(0, 0, 0, 0.3);
+        padding: 0.5rem 0.8rem;
+        width: 300px;
+      }
+      #graphiql-input-endpoint button {
+        border-radius: 9999px;
+        border: 2px solid;
+        border-color: rgba(255, 255, 255, 0.5);
+        background-color: rgba(0, 0, 0, 0.3);
+        padding: 0.5rem 0.8rem;
+        color: white;
+        cursor: pointer;
+      }
     </style>
 
     <!--
@@ -47,36 +77,57 @@
 
   <body>
     <div id="graphiql">Loading...</div>
+    <div class="graphiql-container" id="graphiql-input-endpoint">
+      <div>
+        <form onsubmit="submitendpoint()">
+          <input
+            type="text"
+            name="endpoint"
+            placeholder="https://mywebsite.com/graphql"
+          />
+          <button type="submit">→</button>
+        </form>
+      </div>
+    </div>
     <script
       src="https://unpkg.com/graphiql/graphiql.min.js"
       type="application/javascript"
     ></script>
     <script>
-      function graphQLFetcher(graphQLParams, opts) {
-        return fetch("https://admin.josias.me/graphql", {
-          method: "post",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            ...opts.headers,
-          },
-          body: JSON.stringify(graphQLParams),
-          credentials: "omit",
-        }).then(function (response) {
-          return response.json().catch(function () {
-            return response.text();
+      const params = new URLSearchParams(window.location.search);
+      const endpoint = params.get("endpoint");
+      if (!endpoint) {
+        const graphiQLInputDiv = document.getElementById(
+          "graphiql-input-endpoint"
+        );
+        graphiQLInputDiv.style.display = "block";
+      } else {
+        function graphQLFetcher(graphQLParams, opts) {
+          return fetch(endpoint, {
+            method: "post",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              ...opts.headers,
+            },
+            body: JSON.stringify(graphQLParams),
+            credentials: "omit",
+          }).then(function (response) {
+            return response.json().catch(function () {
+              return response.text();
+            });
           });
-        });
-      }
+        }
 
-      ReactDOM.render(
-        React.createElement(GraphiQL, {
-          fetcher: graphQLFetcher,
-          shouldPersistHeaders: true,
-          defaultEditorToolsVisibility: true,
-        }),
-        document.getElementById("graphiql")
-      );
+        ReactDOM.render(
+          React.createElement(GraphiQL, {
+            fetcher: graphQLFetcher,
+            shouldPersistHeaders: true,
+            defaultEditorToolsVisibility: true,
+          }),
+          document.getElementById("graphiql")
+        );
+      }
     </script>
   </body>
 </html>
